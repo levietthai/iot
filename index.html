@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quiz Game - IoT (200 Questions, Randomized, No Prefixes)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #f4f4f4;
+    }
+    
+    /* Add responsive styles */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      h2 {
+        font-size: 1.2em;
+      }
+
+      .question {
+        font-size: 1em;
+      }
+
+      .option {
+        padding: 15px 10px;
+        margin: 8px 0;
+        font-size: 0.9em;
+      }
+
+      button {
+        width: 100%;
+        margin: 5px 0;
+        padding: 12px;
+        font-size: 1em;
+      }
+
+      #quiz {
+        padding: 15px;
+      }
+
+      #result {
+        font-size: 0.9em;
+      }
+
+      #score {
+        font-size: 0.9em;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 5px;
+      }
+
+      h2 {
+        font-size: 1.1em;
+      }
+
+      .question {
+        font-size: 0.9em;
+      }
+
+      .option {
+        padding: 12px 8px;
+        font-size: 0.85em;
+      }
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .question {
+      margin-bottom: 15px;
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #333;
+    }
+    .option {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      background-color: #111;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #quiz {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>Quiz Game - IoT (200 Câu Hỏi, Ngẫu Nhiên)</h2>
+  <div id="quiz">
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <button id="nextBtn" onclick="nextQuestion()">Tiếp Theo</button>
+    <div id="result"></div>
+    <div id="score" style="margin-top: 10px;">Điểm: 0/200</div>
+  </div>
+
+  <script>
+    const originalQuizData = [
+      { question: "IoT là viết tắt của:", options: ["International of Things", "Internet of Things", "Interface of Things", "Integrated of Technology"], answer: "Internet of Things" },
+      { question: "Thành phần cơ bản của một hệ thống IoT gồm:", options: ["Cảm biến, thiết bị, mạng, nền tảng xử lý", "Cảm biến, màn hình, bàn phím, chuột", "Máy tính, điện thoại, máy in, router", "Cảm biến, ổ cứng, card đồ họa, bộ nhớ"], answer: "Cảm biến, thiết bị, mạng, nền tảng xử lý" },
+      { question: "Một giao thức truyền thông phổ biến của IoT là:", options: ["HTTP", "MQTT", "FTP", "SMTP"], answer: "MQTT" },
+      { question: "Cảm biến nhiệt độ thường được sử dụng để đo:", options: ["Độ ẩm", "Áp suất", "Nhiệt độ", "Ánh sáng"], answer: "Nhiệt độ" },
+      { question: "Kiến trúc 3 lớp của IoT gồm:", options: ["Thiết bị, mạng, ứng dụng", "Cảm biến, xử lý, hiển thị", "Giao diện, dịch vụ, cơ sở dữ liệu", "Phần cứng, phần mềm, dịch vụ"], answer: "Thiết bị, mạng, ứng dụng" },
+      { question: "Công nghệ nào giúp kết nối các thiết bị IoT qua khoảng cách xa?", options: ["Bluetooth", "Zigbee", "LoRaWAN", "NFC"], answer: "LoRaWAN" },
+      { question: "Phương pháp bảo mật thường được áp dụng trong IoT là:", options: ["Mã hóa dữ liệu", "Phát hiện virus", "Quét port", "Tăng cường bộ nhớ"], answer: "Mã hóa dữ liệu" },
+      { question: "Ưu điểm của giao thức MQTT trong IoT là:", options: ["Độ trễ cao", "Tốn nhiều băng thông", "Tiết kiệm năng lượng và băng thông", "Yêu cầu cấu hình phức tạp"], answer: "Tiết kiệm năng lượng và băng thông" },
+      { question: "Một hệ thống IoT hiệu quả cần đảm bảo tính:", options: ["Tính mở rộng", "Tính phức tạp", "Tính độc lập", "Tính hạn chế"], answer: "Tính mở rộng" },
+      { question: "Thiết bị nào dưới đây thường được sử dụng trong IoT gia đình?", options: ["Máy in", "Đồng hồ thông minh", "Máy chiếu", "Máy tính để bàn"], answer: "Đồng hồ thông minh" },
+      { question: "Công nghệ cảm biến không dây phổ biến là:", options: ["Wi-Fi", "Bluetooth Low Energy", "Ethernet", "USB"], answer: "Bluetooth Low Energy" },
+      { question: "Trong khái niệm IoT, “edge computing” đề cập đến:", options: ["Xử lý dữ liệu trên đám mây", "Xử lý dữ liệu tại biên mạng", "Xử lý dữ liệu trên thiết bị trung tâm", "Xử lý dữ liệu bằng máy chủ cục bộ"], answer: "Xử lý dữ liệu tại biên mạng" },
+      { question: "Giao thức CoAP được thiết kế cho:", options: ["Truyền tải video", "Truyền dữ liệu giữa các thiết bị IoT", "Truyền email", "Truyền tải âm thanh"], answer: "Truyền dữ liệu giữa các thiết bị IoT" },
+      { question: "Trong mô hình IoT, “gateway” có chức năng:", options: ["Tăng tốc truy cập internet", "Kết nối các thiết bị với mạng và xử lý sơ bộ dữ liệu", "Lưu trữ dữ liệu lâu dài", "Hiển thị dữ liệu cho người dùng"], answer: "Kết nối các thiết bị với mạng và xử lý sơ bộ dữ liệu" },
+      { question: "Ví dụ về công nghệ hỗ trợ truyền dữ liệu qua khoảng cách ngắn cho IoT là:", options: ["RFID", "LTE", "5G", "Satellite"], answer: "RFID" },
+      { question: "Một ứng dụng IoT trong nông nghiệp là:", options: ["Tự động hóa công nghiệp", "Giám sát đất đai và tưới tiêu thông minh", "Quản lý nhân sự", "Phân phối hàng hóa"], answer: "Giám sát đất đai và tưới tiêu thông minh" },
+      { question: "IoT có thể cải thiện hiệu quả sử dụng năng lượng trong các tòa nhà thông qua:", options: ["Hệ thống chiếu sáng tự động", "Sử dụng máy in tiết kiệm năng lượng", "Tăng số lượng thiết bị điện", "Giảm kết nối internet"], answer: "Hệ thống chiếu sáng tự động" },
+      { question: "Để giao tiếp giữa các thiết bị IoT, giao thức nào dưới đây thường được sử dụng?", options: ["TCP/IP", "UDP", "SMTP", "POP3"], answer: "TCP/IP" },
+      { question: "Thiết bị IoT cần sử dụng cảm biến để thu thập dữ liệu, ví dụ:", options: ["Cảm biến chuyển động", "Cảm biến âm thanh", "Cảm biến mùi", "Cảm biến sóng"], answer: "Cảm biến chuyển động" },
+      { question: "Mục tiêu chính của IoT là:", options: ["Kết nối và tự động hóa các thiết bị", "Tăng số lượng người dùng internet", "Giảm tốc độ internet", "Tăng chi phí hệ thống"], answer: "Kết nối và tự động hóa các thiết bị" },
+      { question: "Một trong những thách thức của IoT là:", options: ["Quản lý bảo mật và quyền riêng tư", "Tăng chi phí điện năng", "Giảm khả năng kết nối", "Phát triển giao diện người dùng"], answer: "Quản lý bảo mật và quyền riêng tư" },
+      { question: "Công nghệ nào cho phép các thiết bị IoT giao tiếp không dây?", options: ["ZigBee", "HDMI", "VGA", "DVI"], answer: "ZigBee" },
+      { question: "Trong IoT, “cloud computing” thường được sử dụng để:", options: ["Lưu trữ và xử lý dữ liệu từ các thiết bị", "Kết nối các thiết bị với mạng cục bộ", "Quản lý phần cứng", "Tăng cường bảo mật nội bộ"], answer: "Lưu trữ và xử lý dữ liệu từ các thiết bị" },
+      { question: "LoRaWAN là công nghệ IoT chuyên dùng cho:", options: ["Truyền dữ liệu tốc độ cao", "Truyền dữ liệu qua khoảng cách xa với năng lượng thấp", "Truyền hình ảnh chất lượng cao", "Truyền âm thanh không dây"], answer: "Truyền dữ liệu qua khoảng cách xa với năng lượng thấp" },
+      { question: "Đặc điểm của “smart home” là:", options: ["Chỉ sử dụng cho văn phòng", "Hệ thống tự động hóa trong nhà", "Không liên quan đến IoT", "Chỉ áp dụng cho khách sạn"], answer: "Hệ thống tự động hóa trong nhà" },
+      { question: "Các thiết bị IoT thường cần được cập nhật firmware để:", options: ["Tăng thời gian sử dụng pin", "Cải thiện bảo mật và hiệu năng", "Giảm kết nối internet", "Tăng tốc độ xử lý đồ họa"], answer: "Cải thiện bảo mật và hiệu năng" },
+      { question: "Giao thức HTTP được sử dụng phổ biến trong IoT để:", options: ["Quản lý điện năng", "Xử lý cảm biến", "Truyền tải dữ liệu qua web", "Điều khiển thiết bị"], answer: "Truyền tải dữ liệu qua web" },
+      { question: "Công nghệ NFC được ứng dụng trong IoT cho mục đích:", options: ["Lưu trữ dữ liệu", "Thanh toán và giao tiếp ngắn hạn", "Truyền dữ liệu video", "Kết nối qua khoảng cách xa"], answer: "Thanh toán và giao tiếp ngắn hạn" },
+      { question: "Trong IoT, “Big Data” thường chỉ:", options: ["Dữ liệu lớn thu thập từ thiết bị", "Dữ liệu nhỏ được xử lý cục bộ", "Dữ liệu hình ảnh", "Dữ liệu âm thanh"], answer: "Dữ liệu lớn thu thập từ thiết bị" },
+      { question: "Một lợi ích của IoT trong quản lý đô thị là:", options: ["Tăng chi phí vận hành", "Cải thiện quản lý giao thông", "Giảm số lượng phương tiện", "Tăng độ phức tạp hạ tầng"], answer: "Cải thiện quản lý giao thông" },
+      { question: "Cảm biến độ ẩm thường được sử dụng trong:", options: ["Ứng dụng thời tiết và nông nghiệp", "Quản lý mạng", "Xác định vị trí", "Điều khiển từ xa"], answer: "Ứng dụng thời tiết và nông nghiệp" },
+      { question: "Một yếu tố quan trọng của hệ thống IoT là:", options: ["Hiệu suất mạng", "Kích thước thiết bị", "Màu sắc thiết bị", "Thương hiệu"], answer: "Hiệu suất mạng" },
+      { question: "IoT đóng góp gì cho ngành y tế?", options: ["Giám sát bệnh nhân từ xa", "Tăng thời gian chờ đợi", "Giảm số lượng bác sĩ", "Tăng chi phí thuốc"], answer: "Giám sát bệnh nhân từ xa" },
+      { question: "Các thiết bị IoT thường giao tiếp qua mạng sử dụng:", options: ["Mạng di động và Wi-Fi", "Mạng cáp quang", "Mạng truyền hình cáp", "Mạng nội bộ"], answer: "Mạng di động và Wi-Fi" },
+      { question: "Một trong những rủi ro của IoT là:", options: ["Tấn công mạng và xâm nhập dữ liệu", "Giảm số lượng thiết bị", "Tăng tốc độ mạng", "Cải thiện bảo mật"], answer: "Tấn công mạng và xâm nhập dữ liệu" },
+      { question: "Ưu điểm của Bluetooth Low Energy trong IoT là:", options: ["Tiết kiệm năng lượng", "Tốc độ truyền tải cao", "Kết nối không ổn định", "Tiêu thụ điện năng lớn"], answer: "Tiết kiệm năng lượng" },
+      { question: "Trong IoT, “smart city” đề cập đến:", options: ["Ứng dụng công nghệ để cải thiện chất lượng sống trong đô thị", "Thành phố không có internet", "Thành phố cổ điển", "Thành phố không có cảm biến"], answer: "Ứng dụng công nghệ để cải thiện chất lượng sống trong đô thị" },
+      { question: "Cảm biến gia tốc được sử dụng để đo:", options: ["Vận tốc và gia tốc", "Áp suất", "Nhiệt độ", "Ánh sáng"], answer: "Vận tốc và gia tốc" },
+      { question: "IoT giúp doanh nghiệp:", options: ["Tự động hóa quy trình", "Giảm số lượng nhân viên", "Tăng chi phí vận hành", "Giảm chất lượng sản phẩm"], answer: "Tự động hóa quy trình" },
+      { question: "Trong IoT, “actuator” là:", options: ["Thiết bị cảm biến", "Thiết bị lưu trữ dữ liệu", "Thiết bị thực hiện hành động dựa trên dữ liệu", "Thiết bị xử lý tín hiệu"], answer: "Thiết bị thực hiện hành động dựa trên dữ liệu" },
+      { question: "Kết nối mạng trong IoT thường dựa vào công nghệ:", options: ["4G/5G", "DSL", "Satellite", "Ethernet truyền thống"], answer: "4G/5G" },
+      { question: "Một hệ thống IoT có thể giúp quản lý năng lượng trong:", options: ["Nhà thông minh", "Trường học", "Trung tâm mua sắm", "Bệnh viện"], answer: "Nhà thông minh" },
+      { question: "Trong IoT, “device management” là:", options: ["Quản lý và cập nhật thiết bị từ xa", "Quản lý tài khoản email", "Quản lý dữ liệu đám mây", "Quản lý kết nối mạng"], answer: "Quản lý và cập nhật thiết bị từ xa" },
+      { question: "Một ví dụ về ứng dụng IoT trong giao thông là:", options: ["Hệ thống đèn giao thông thông minh", "Máy tính bảng di động", "Máy in văn phòng", "Camera an ninh"], answer: "Hệ thống đèn giao thông thông minh" },
+      { question: "Một công nghệ truyền thông không dây cho IoT là:", options: ["ZigBee", "USB", "HDMI", "VGA"], answer: "ZigBee" },
+      { question: "Dữ liệu thu thập từ các cảm biến trong IoT thường được xử lý tại:", options: ["Cloud hoặc edge computing", "Ổ cứng di động", "Máy in", "Bộ nhớ USB"], answer: "Cloud hoặc edge computing" },
+      { question: "Một ứng dụng IoT trong nông nghiệp là:", options: ["Giám sát độ ẩm đất", "Quản lý bán hàng", "Phân tích thị trường", "Quản lý nhân sự"], answer: "Giám sát độ ẩm đất" },
+      { question: "IoT có thể được sử dụng để cải thiện:", options: ["Hiệu suất công nghiệp", "Độ mờ của màn hình", "Tốc độ in ấn", "Chất lượng âm thanh"], answer: "Hiệu suất công nghiệp" },
+      { question: "Công nghệ kết nối phù hợp cho IoT cần tiêu thụ điện năng thấp là:", options: ["Bluetooth Low Energy", "Wi-Fi", "LTE", "Ethernet"], answer: "Bluetooth Low Energy" },
+      { question: "Trong IoT, “digital twin” ám chỉ:", options: ["Mô hình số của một đối tượng thực tế", "Bản sao của dữ liệu", "Hệ thống dự phòng", "Thiết bị nhân bản"], answer: "Mô hình số của một đối tượng thực tế" },
+      { question: "Ứng dụng của IoT trong sản xuất là:", options: ["Giám sát máy móc tự động", "Quản lý nhân sự", "Tăng chi phí bảo trì", "Giảm số lượng sản phẩm"], answer: "Giám sát máy móc tự động" },
+      { question: "Các tiêu chuẩn bảo mật cho IoT thường bao gồm:", options: ["Mã hóa, xác thực và phân quyền", "Chỉ mã hóa", "Chỉ xác thực", "Chỉ phân quyền"], answer: "Mã hóa, xác thực và phân quyền" },
+      { question: "Một lợi ích của IoT trong nông nghiệp là:", options: ["Tối ưu hóa tưới tiêu", "Tăng số lượng sâu bệnh", "Giảm sản lượng nông nghiệp", "Tăng chi phí sản xuất"], answer: "Tối ưu hóa tưới tiêu" },
+      { question: "IoT được ứng dụng trong quản lý chất lượng không khí thông qua:", options: ["Cảm biến khí độc", "Cảm biến ánh sáng", "Cảm biến âm thanh", "Cảm biến áp suất"], answer: "Cảm biến khí độc" },
+      { question: "Trong IoT, “edge node” ám chỉ:", options: ["Thiết bị xử lý dữ liệu cục bộ", "Trung tâm dữ liệu lớn", "Thiết bị lưu trữ đám mây", "Máy chủ chính"], answer: "Thiết bị xử lý dữ liệu cục bộ" },
+      { question: "IoT có thể cải thiện hiệu quả trong quản lý:", options: ["Hệ thống giao thông công cộng", "Số lượng email", "Thời gian chờ trực tuyến", "Tốc độ máy in"], answer: "Hệ thống giao thông công cộng" },
+      { question: "Giao thức truyền thông phổ biến trong IoT công nghiệp là:", options: ["Modbus", "POP3", "IMAP", "FTP"], answer: "Modbus" },
+      { question: "Trong IoT, “actuator” có chức năng:", options: ["Thực hiện hành động dựa trên tín hiệu", "Thu thập dữ liệu", "Lưu trữ dữ liệu", "Hiển thị dữ liệu"], answer: "Thực hiện hành động dựa trên tín hiệu" },
+      { question: "Một lợi ích của IoT là:", options: ["Tăng cường hiệu quả hoạt động", "Giảm sự kết nối", "Tăng chi phí vận hành", "Giảm tính linh hoạt"], answer: "Tăng cường hiệu quả hoạt động" },
+      { question: "Trong IoT, “sensor node” là:", options: ["Thiết bị thu thập và gửi dữ liệu từ cảm biến", "Thiết bị lưu trữ dữ liệu", "Thiết bị hiển thị thông tin", "Thiết bị xử lý tín hiệu"], answer: "Thiết bị thu thập và gửi dữ liệu từ cảm biến" },
+      { question: "Một ứng dụng IoT trong lĩnh vực công nghiệp là:", options: ["Giám sát dây chuyền sản xuất", "Tăng số lượng nhân viên", "Giảm sản lượng", "Tăng chi phí bảo trì"], answer: "Giám sát dây chuyền sản xuất" },
+      { question: "Công nghệ nào hỗ trợ IoT cho kết nối tốc độ cao?", options: ["Wi-Fi 6", "Bluetooth 2.0", "ZigBee", "LoRaWAN"], answer: "Wi-Fi 6" },
+      { question: "IoT cải thiện năng suất trong sản xuất thông qua:", options: ["Tự động hóa quy trình", "Giảm tự động hóa", "Tăng thời gian chết máy", "Giảm số lượng cảm biến"], answer: "Tự động hóa quy trình" },
+      { question: "Một thách thức của IoT là vấn đề:", options: ["Bảo mật và quyền riêng tư", "Tăng tốc độ máy in", "Giảm số lượng cảm biến", "Tăng chi phí điện năng"], answer: "Bảo mật và quyền riêng tư" },
+      { question: "Trong IoT, “gateway” được sử dụng để:", options: ["Kết nối các mạng khác nhau", "Lưu trữ dữ liệu cục bộ", "Hiển thị dữ liệu người dùng", "Quản lý tài khoản email"], answer: "Kết nối các mạng khác nhau" },
+      { question: "Một công nghệ quan trọng trong IoT là:", options: ["Trí tuệ nhân tạo (AI)", "Máy in 3D", "Bàn phím cơ", "Màn hình LED"], answer: "Trí tuệ nhân tạo (AI)" },
+      { question: "Cảm biến ánh sáng trong IoT thường dùng để đo:", options: ["Cường độ ánh sáng", "Nhiệt độ", "Độ ẩm", "Áp suất"], answer: "Cường độ ánh sáng" },
+      { question: "Thuật ngữ “data analytics” trong IoT đề cập đến:", options: ["Phân tích dữ liệu thu thập từ cảm biến", "Lưu trữ dữ liệu lâu dài", "Tăng băng thông", "Quản lý thiết bị"], answer: "Phân tích dữ liệu thu thập từ cảm biến" },
+      { question: "Một ứng dụng IoT trong ngành năng lượng là:", options: ["Giám sát tiêu thụ năng lượng", "Tăng tiêu thụ điện", "Giảm hiệu quả năng lượng", "Tăng giá điện"], answer: "Giám sát tiêu thụ năng lượng" },
+      { question: "Trong IoT, “smart grid” ám chỉ:", options: ["Hệ thống lưới điện thông minh", "Lưới điện truyền thống", "Hệ thống mạng xã hội", "Hệ thống cảm biến nhiệt độ"], answer: "Hệ thống lưới điện thông minh" },
+      { question: "Một yếu tố cần xem xét khi triển khai IoT là:", options: ["Độ tin cậy của kết nối", "Màu sắc thiết bị", "Thương hiệu máy tính", "Kích thước màn hình"], answer: "Độ tin cậy của kết nối" },
+      { question: "Trong IoT, “device provisioning” là:", options: ["Quá trình đăng ký và cấu hình thiết bị", "Quá trình sản xuất thiết bị", "Quá trình bán hàng", "Quá trình bảo trì hệ thống"], answer: "Quá trình đăng ký và cấu hình thiết bị" },
+      { question: "IoT trong quản lý giao thông giúp:", options: ["Tối ưu hóa luồng giao thông", "Tăng ùn tắc giao thông", "Giảm số xe lưu thông", "Tăng cường giám sát video"], answer: "Tối ưu hóa luồng giao thông" },
+      { question: "Một tiêu chí để đánh giá hệ thống IoT là:", options: ["Tính mở rộng", "Tính phức tạp", "Tính cồng kềnh", "Tính lỗi thời"], answer: "Tính mở rộng" },
+      { question: "Công nghệ hỗ trợ giao tiếp giữa các thiết bị IoT qua khoảng cách xa là:", options: ["NB-IoT", "Wi-Fi", "Bluetooth", "ZigBee"], answer: "NB-IoT" },
+      { question: "Trong IoT, “firmware” là:", options: ["Phần mềm tích hợp trong thiết bị", "Hệ điều hành máy tính", "Ứng dụng di động", "Trình duyệt web"], answer: "Phần mềm tích hợp trong thiết bị" },
+      { question: "Một ứng dụng IoT trong giám sát môi trường là:", options: ["Đo chất lượng không khí", "Tăng cường truyền hình", "Quản lý email", "Phát hiện gian lận"], answer: "Đo chất lượng không khí" },
+      { question: "IoT hỗ trợ cải thiện an ninh mạng qua:", options: ["Giám sát và phát hiện bất thường", "Tăng tốc độ mạng", "Giảm số lượng thiết bị", "Tăng chi phí vận hành"], answer: "Giám sát và phát hiện bất thường" },
+      { question: "Công nghệ cho phép truyền tải dữ liệu qua khoảng cách xa trong IoT là:", options: ["LoRaWAN", "Wi-Fi", "Bluetooth", "ZigBee"], answer: "LoRaWAN" },
+      { question: "Mục đích của “data visualization” trong IoT là:", options: ["Trình bày dữ liệu một cách trực quan", "Lưu trữ dữ liệu", "Tăng tốc độ xử lý", "Quản lý thiết bị"], answer: "Trình bày dữ liệu một cách trực quan" },
+      { question: "IoT đóng góp cho ngành sản xuất bằng cách:", options: ["Giám sát và tối ưu hóa quy trình sản xuất", "Giảm số lượng cảm biến", "Tăng thời gian chết máy", "Giảm số lượng nhân viên"], answer: "Giám sát và tối ưu hóa quy trình sản xuất" },
+      { question: "Một lợi ích của IoT trong năng lượng là:", options: ["Quản lý tiêu thụ năng lượng hiệu quả", "Tăng mức tiêu thụ điện", "Giảm đảm bảo mật hệ thống", "Tăng chi phí vận hành"], answer: "Quản lý tiêu thụ năng lượng hiệu quả" },
+      { question: "Trong IoT, “sensor fusion” có nghĩa là:", options: ["Kết hợp dữ liệu từ nhiều loại cảm biến", "Tách dữ liệu ra riêng lẻ", "Xóa dữ liệu không cần thiết", "Tăng số lượng cảm biến"], answer: "Kết hợp dữ liệu từ nhiều loại cảm biến" },
+      { question: "Một ứng dụng IoT trong ngành công nghiệp là:", options: ["Giám sát tình trạng máy móc", "Quản lý tài chính", "Tăng số lượng email", "Giảm dữ liệu"], answer: "Giám sát tình trạng máy móc" },
+      { question: "Công nghệ giúp kết nối các thiết bị IoT tiêu thụ năng lượng thấp là:", options: ["Bluetooth Low Energy", "Wi-Fi mạnh mẽ", "Ethernet", "USB"], answer: "Bluetooth Low Energy" },
+      { question: "IoT hỗ trợ giám sát hoạt động của hệ thống thông qua:", options: ["Hệ thống cảm biến và camera", "Máy in laser", "Bàn phím cơ", "Ổ cứng ngoài"], answer: "Hệ thống cảm biến và camera" },
+      { question: "“Real-time monitoring” trong IoT có nghĩa là:", options: ["Giám sát dữ liệu ngay lập tức", "Lưu trữ dữ liệu lâu dài", "Quản lý thiết bị từ xa", "Phân tích dữ liệu cũ"], answer: "Giám sát dữ liệu ngay lập tức" },
+      { question: "Một ứng dụng của IoT trong nông nghiệp là:", options: ["Giám sát tình trạng cây trồng", "Quản lý tài chính", "Tăng sản lượng điện", "Giảm tiêu thụ nước"], answer: "Giám sát tình trạng cây trồng" },
+      { question: "Trong IoT, “over-the-air update” đề cập đến:", options: ["Cập nhật phần mềm từ xa qua sóng không dây", "Cập nhật bằng cáp USB", "Cập nhật qua đĩa CD", "Cập nhật thủ công"], answer: "Cập nhật phần mềm từ xa qua sóng không dây" },
+      { question: "Một thách thức của IoT về quy mô là:", options: ["Quản lý hàng ngàn thiết bị", "Giảm số lượng thiết bị", "Tăng thời gian phản hồi", "Giảm kết nối mạng"], answer: "Quản lý hàng ngàn thiết bị" },
+      { question: "Trong IoT, “sensing layer” thường chứa:", options: ["Cảm biến và thiết bị thu thập dữ liệu", "Máy chủ và lưu trữ", "Ứng dụng web", "Thiết bị di động"], answer: "Cảm biến và thiết bị thu thập dữ liệu" },
+      { question: "IoT cải thiện quá trình bảo trì qua:", options: ["Dự đoán sự cố và bảo trì dự phòng", "Tăng thời gian chết máy", "Giảm số lượng cảm biến", "Tăng chi phí sửa chữa"], answer: "Dự đoán sự cố và bảo trì dự phòng" },
+      { question: "Một ứng dụng của IoT trong lĩnh vực y tế là:", options: ["Giám sát tình trạng sức khỏe từ xa", "Quản lý hồ sơ tài chính", "Tăng số lượng bệnh viện", "Giảm số lượng bác sĩ"], answer: "Giám sát tình trạng sức khỏe từ xa" },
+      { question: "Trong IoT, “interoperability” đề cập đến:", options: ["Khả năng các thiết bị làm việc cùng nhau", "Khả năng tự động cập nhật", "Khả năng lưu trữ dữ liệu", "Khả năng xử lý dữ liệu nhanh"], answer: "Khả năng các thiết bị làm việc cùng nhau" },
+      { question: "Một mục tiêu của IoT là:", options: ["Tạo ra kết nối thông minh và tự động hóa", "Giảm sự kết nối giữa các thiết bị", "Tăng chi phí hệ thống", "Giảm tốc độ xử lý"], answer: "Tạo ra kết nối thông minh và tự động hóa" },
+      { question: "“Scalability” trong IoT có nghĩa là:", options: ["Khả năng mở rộng hệ thống khi cần", "Giảm kích thước thiết bị", "Tăng tính phức tạp", "Giảm tốc độ xử lý"], answer: "Khả năng mở rộng hệ thống khi cần" },
+      { question: "IoT mang lại lợi ích cho ngành bán lẻ bằng cách:", options: ["Tối ưu hóa quản lý kho hàng", "Tăng thời gian chờ", "Giảm số lượng khách hàng", "Tăng chi phí vận hành"], answer: "Tối ưu hóa quản lý kho hàng" },
+      { question: "Một yêu cầu cơ bản của hệ thống IoT là:", options: ["Tính bảo mật, ổn định và mở rộng", "Tính phức tạp, độc lập và hạn chế", "Tính thẩm mỹ, thiết kế và thương hiệu", "Tính tiện lợi, đơn giản và rẻ tiền"], answer: "Tính bảo mật, ổn định và mở rộng" },
+      { question: "Trong IoT, “integration” thường ám chỉ:", options: ["Quá trình tích hợp các thiết bị và dữ liệu", "Quá trình tách biệt thiết bị", "Quá trình cập nhật firmware", "Quá trình bảo trì hệ thống"], answer: "Quá trình tích hợp các thiết bị và dữ liệu" },
+      { question: "Một thách thức khi triển khai IoT trên quy mô lớn là:", options: ["Quản lý và bảo mật hàng ngàn thiết bị", "Giảm số lượng cảm biến", "Tăng chi phí phần cứng", "Giảm tốc độ xử lý"], answer: "Quản lý và bảo mật hàng ngàn thiết bị" },
+      { question: "Trong hệ thống IoT, vai trò chính của cảm biến là:", options: ["Ghi nhận dữ liệu từ môi trường", "Xử lý dữ liệu", "Lưu trữ dữ liệu", "Kết nối internet"], answer: "Ghi nhận dữ liệu từ môi trường" },
+      { question: "Một giao thức tiết kiệm băng thông được dùng trong IoT là:", options: ["MQTT", "FTP", "SMTP", "HTTP"], answer: "MQTT" },
+      { question: "LoRaWAN chủ yếu được sử dụng cho:", options: ["Truyền dữ liệu qua khoảng cách xa với tiêu thụ năng lượng thấp", "Truyền dữ liệu tốc độ cao", "Truyền hình ảnh", "Truyền tải âm thanh"], answer: "Truyền dữ liệu qua khoảng cách xa với tiêu thụ năng lượng thấp" },
+      { question: "Cảm biến đo nhiệt độ thường có ứng dụng trong:", options: ["Kiểm soát môi trường", "Điều khiển âm thanh", "Quản lý camera", "Xử lý dữ liệu văn bản"], answer: "Kiểm soát môi trường" },
+      { question: "Tầng “perception” trong mô hình IoT bao gồm:", options: ["Cảm biến và thu thập dữ liệu", "Phân tích dữ liệu", "Lưu trữ trên đám mây", "Giao diện người dùng"], answer: "Cảm biến và thu thập dữ liệu" },
+      { question: "“Edge computing” giúp:", options: ["Xử lý dữ liệu gần nguồn phát sinh", "Lưu trữ dữ liệu trên máy chủ trung tâm", "Tăng băng thông internet", "Kết nối thiết bị từ xa"], answer: "Xử lý dữ liệu gần nguồn phát sinh" },
+      { question: "Một ví dụ về giao thức dành riêng cho IoT là:", options: ["CoAP", "FTP", "Telnet", "POP3"], answer: "CoAP" },
+      { question: "Chức năng của “gateway” là:", options: ["Kết nối các thiết bị với mạng Internet", "Xử lý các tác vụ tính toán nặng", "Lưu trữ dữ liệu lâu dài", "Hiển thị thông tin cho người dùng"], answer: "Kết nối các thiết bị với mạng Internet" },
+      { question: "Một ứng dụng của IoT trong nhà thông minh là:", options: ["Tự động hóa hệ thống chiếu sáng và điều hòa", "Quản lý email", "Điều khiển máy in", "Phát hiện virus"], answer: "Tự động hóa hệ thống chiếu sáng và điều hòa" },
+      { question: "Cảm biến gia tốc được sử dụng để đo:", options: ["Chuyển động và vận tốc", "Nhiệt độ", "Độ ẩm", "Áp suất"], answer: "Chuyển động và vận tốc" },
+      { question: "Trong lĩnh vực nông nghiệp, IoT hỗ trợ:", options: ["Tối ưu hóa tưới tiêu và giám sát đất đai", "Quản lý nhân sự", "Phân phối sản phẩm", "Quản lý email"], answer: "Tối ưu hóa tưới tiêu và giám sát đất đai" },
+      { question: "“Tầng perception” của IoT chủ yếu bao gồm:", options: ["Thiết bị thu thập dữ liệu", "Phân tích dữ liệu", "Lưu trữ dữ liệu", "Hiển thị kết quả"], answer: "Thiết bị thu thập dữ liệu" },
+      { question: "Giao thức CoAP thích hợp cho:", options: ["Các thiết bị tiêu thụ năng lượng thấp", "Truyền tải video", "Truyền âm thanh", "Giao tiếp qua cáp"], answer: "Các thiết bị tiêu thụ năng lượng thấp" },
+      { question: "Một yếu tố quan trọng khi triển khai hệ thống IoT là:", options: ["Tính bảo mật", "Thiết kế giao diện", "Màu sắc của cảm biến", "Thương hiệu sản xuất"], answer: "Tính bảo mật" },
+      { question: "Trong ngành y tế, IoT được dùng để:", options: ["Giám sát bệnh nhân từ xa", "Quản lý hồ sơ bệnh án trên giấy", "Tăng thời gian chờ đợi", "Phát triển trò chơi"], answer: "Giám sát bệnh nhân từ xa" },
+      { question: "Một thách thức của IoT là:", options: ["Bảo mật và quyền riêng tư", "Tăng tốc độ xử lý", "Giảm số lượng thiết bị", "Tăng chi phí vật liệu"], answer: "Bảo mật và quyền riêng tư" },
+      { question: "Giao thức NB-IoT được thiết kế để:", options: ["Kết nối thiết bị qua mạng di động với tiêu thụ năng lượng thấp", "Truyền dữ liệu tốc độ cao", "Phục vụ truyền hình trực tuyến", "Kết nối qua Wi-Fi"], answer: "Kết nối thiết bị qua mạng di động với tiêu thụ năng lượng thấp" },
+      { question: "Khái niệm “digital twin” đề cập đến:", options: ["Mô hình số hóa của một đối tượng thực", "Bản sao cứng của thiết bị", "Công nghệ lưu trữ đám mây", "Phần mềm sao lưu"], answer: "Mô hình số hóa của một đối tượng thực" },
+      { question: "Một lợi ích của IoT trong sản xuất là:", options: ["Tự động hóa quy trình sản xuất", "Tăng thời gian bảo trì", "Giảm số lượng máy móc", "Tăng chi phí nhân công"], answer: "Tự động hóa quy trình sản xuất" },
+      { question: "Các thiết bị IoT thường giao tiếp qua:", options: ["Wi-Fi hoặc mạng di động", "Cáp quang", "DSL", "Truyền hình cáp"], answer: "Wi-Fi hoặc mạng di động" },
+      { question: "Trong IoT, “actuator” thực hiện:", options: ["Hành động dựa trên tín hiệu từ cảm biến", "Thu thập dữ liệu môi trường", "Lưu trữ dữ liệu tạm thời", "Xử lý dữ liệu lớn"], answer: "Hành động dựa trên tín hiệu từ cảm biến" },
+      { question: "Ứng dụng của IoT trong giao thông bao gồm:", options: ["Hệ thống đèn giao thông thông minh", "Phát triển ứng dụng trò chơi", "Quản lý email", "Điều khiển máy in"], answer: "Hệ thống đèn giao thông thông minh" },
+      { question: "Ưu điểm của Bluetooth Low Energy (BLE) là:", options: ["Tiết kiệm điện năng", "Tốc độ truyền dữ liệu cao", "Khoảng cách truyền tải lớn", "Chi phí cao"], answer: "Tiết kiệm điện năng" },
+      { question: "IoT trong quản lý đô thị giúp:", options: ["Giám sát giao thông và chất lượng môi trường", "Quản lý mạng xã hội", "Phát triển ứng dụng di động", "Lưu trữ dữ liệu văn bản"], answer: "Giám sát giao thông và chất lượng môi trường" },
+      { question: "Khái niệm “fog computing” chỉ:", options: ["Xử lý dữ liệu tại tầng gần nguồn phát sinh", "Lưu trữ dữ liệu trên đám mây", "Xử lý dữ liệu từ xa", "Kết nối các thiết bị qua cáp"], answer: "Xử lý dữ liệu tại tầng gần nguồn phát sinh" },
+      { question: "IoT giúp cải thiện hiệu quả năng lượng trong các tòa nhà bằng cách:", options: ["Điều chỉnh tự động hệ thống chiếu sáng và điều hòa", "Tăng số lượng thiết bị điện", "Giảm hệ thống điều khiển", "Tăng sử dụng máy in"], answer: "Điều chỉnh tự động hệ thống chiếu sáng và điều hòa" },
+      { question: "Cảm biến chuyển động được ứng dụng phổ biến trong:", options: ["Hệ thống an ninh gia đình", "Quản lý kho hàng", "Truyền hình", "Hệ thống âm thanh"], answer: "Hệ thống an ninh gia đình" },
+      { question: "“Data analytics” trong IoT nhằm:", options: ["Phân tích dữ liệu thu thập được để ra quyết định", "Lưu trữ dữ liệu trên ổ cứng", "Tăng tốc độ truyền tải", "Quản lý kết nối mạng"], answer: "Phân tích dữ liệu thu thập được để ra quyết định" },
+      { question: "Một ứng dụng của IoT trong ngành công nghiệp là:", options: ["Giám sát và bảo trì máy móc tự động", "Quản lý nhân sự văn phòng", "Tăng thời gian chết máy", "Giảm sản lượng sản xuất"], answer: "Giám sát và bảo trì máy móc tự động" },
+      { question: "Các thiết bị IoT thường sử dụng nguồn năng lượng nào?", options: ["Pin hoặc nguồn năng lượng hiệu quả", "Nguồn điện trực tiếp", "Năng lượng gió duy nhất", "Năng lượng thủ công"], answer: "Pin hoặc nguồn năng lượng hiệu quả" },
+      { question: "IoT góp phần cải thiện ngành năng lượng thông qua:", options: ["Quản lý tiêu thụ điện năng hiệu quả", "Tăng sử dụng điện không kiểm soát", "Giảm số lượng cảm biến", "Tăng lưu trữ dữ liệu"], answer: "Quản lý tiêu thụ điện năng hiệu quả" },
+      { question: "Một tiêu chuẩn kết nối quan trọng cho IoT là:", options: ["IPv6", "IPv4", "DNS", "HTTP"], answer: "IPv6" },
+      { question: "Trong nông nghiệp, IoT giúp:", options: ["Quản lý tưới tiêu và giám sát môi trường", "Tăng sản lượng email", "Phát triển ứng dụng mạng xã hội", "Quản lý camera an ninh"], answer: "Quản lý tưới tiêu và giám sát môi trường" },
+      { question: "“Cloud platform” trong IoT thường dùng để:", options: ["Lưu trữ và xử lý dữ liệu từ thiết bị", "Kết nối cảm biến với màn hình", "Quản lý phần cứng", "Phát triển game"], answer: "Lưu trữ và xử lý dữ liệu từ thiết bị" },
+      { question: "Một công cụ phát triển IoT phổ biến là:", options: ["Arduino", "Excel", "PowerPoint", "Photoshop"], answer: "Arduino" },
+      { question: "Trong lĩnh vực giao thông, IoT được ứng dụng để:", options: ["Quản lý luồng giao thông và giám sát vận tải", "Tăng số lượng phương tiện", "Giảm an toàn giao thông", "Tăng thời gian phản ứng"], answer: "Quản lý luồng giao thông và giám sát vận tải" },
+      { question: "“Firmware update” trong IoT có nghĩa là:", options: ["Cập nhật phần mềm tích hợp trên thiết bị", "Cập nhật trình duyệt web", "Cập nhật hệ điều hành máy tính", "Cập nhật ứng dụng di động"], answer: "Cập nhật phần mềm tích hợp trên thiết bị" },
+      { question: "Một ứng dụng của IoT trong quản lý chất lượng không khí là:", options: ["Sử dụng cảm biến khí độc để theo dõi ô nhiễm", "Quản lý lưu trữ dữ liệu văn bản", "Phát triển trò chơi", "Quản lý email"], answer: "Sử dụng cảm biến khí độc để theo dõi ô nhiễm" },
+      { question: "Khả năng “interoperability” trong IoT chỉ:", options: ["Các thiết bị và hệ thống có thể làm việc cùng nhau", "Tốc độ truyền tải cao", "Tính bảo mật cao", "Khả năng lưu trữ dữ liệu lớn"], answer: "Các thiết bị và hệ thống có thể làm việc cùng nhau" },
+      { question: "Cảm biến áp suất thường được sử dụng để đo:", options: ["Áp suất không khí", "Nhiệt độ", "Độ ẩm", "Ánh sáng"], answer: "Áp suất không khí" },
+      { question: "Một ứng dụng IoT trong an ninh là:", options: ["Giám sát qua camera và cảm biến chuyển động", "Quản lý website", "Phát triển ứng dụng văn phòng", "Lưu trữ dữ liệu trên ổ cứng"], answer: "Giám sát qua camera và cảm biến chuyển động" },
+      { question: "Nhà thông minh dựa vào IoT có thể tích hợp với:", options: ["Hệ thống điều khiển tự động", "Hệ thống giải trí cá nhân", "Máy in laser", "Máy tính để bàn"], answer: "Hệ thống điều khiển tự động" },
+      { question: "Giao thức ZigBee nổi tiếng nhờ:", options: ["Tiết kiệm năng lượng và kết nối ổn định", "Tốc độ truyền dữ liệu cao", "Khoảng cách truyền tải ngắn", "Chi phí sản xuất cao"], answer: "Tiết kiệm năng lượng và kết nối ổn định" },
+      { question: "Trong lĩnh vực thương mại, IoT được ứng dụng để:", options: ["Quản lý kho hàng thông minh", "Phát triển ứng dụng di động", "Quản lý email khách hàng", "Quản lý hệ thống máy in"], answer: "Quản lý kho hàng thông minh" },
+      { question: "“Sensor node” trong IoT là:", options: ["Thiết bị thu thập và truyền dữ liệu từ cảm biến", "Hệ thống lưu trữ đám mây", "Máy chủ trung tâm", "Giao diện người dùng"], answer: "Thiết bị thu thập và truyền dữ liệu từ cảm biến" },
+      { question: "IoT hỗ trợ giám sát thiết bị thông qua:", options: ["Hệ thống giám sát thời gian thực", "Lưu trữ dữ liệu offline", "Phân tích hàng tháng", "Kết nối mạng chậm"], answer: "Hệ thống giám sát thời gian thực" },
+      { question: "Một tính năng cốt lõi của IoT là:", options: ["Tự động hóa và kết nối thiết bị", "Tăng chi phí vận hành", "Giảm tính bảo mật", "Phát triển ứng dụng riêng lẻ"], answer: "Tự động hóa và kết nối thiết bị" },
+      { question: "“Data storage” trong IoT chủ yếu được thực hiện trên:", options: ["Đám mây", "Ổ cứng cục bộ", "USB", "Đĩa CD"], answer: "Đám mây" },
+      { question: "Một ứng dụng của IoT trong ngành năng lượng là:", options: ["Giám sát và điều chỉnh tiêu thụ điện năng", "Tăng sử dụng điện không kiểm soát", "Phát triển website", "Quản lý mạng nội bộ"], answer: "Giám sát và điều chỉnh tiêu thụ điện năng" },
+      { question: "Trong y tế, IoT hỗ trợ:", options: ["Theo dõi bệnh nhân từ xa", "Tăng chi phí điều trị", "Giảm số thiết bị y tế", "Phát triển phần mềm quản lý"], answer: "Theo dõi bệnh nhân từ xa" },
+      { question: "Một giao thức quan trọng trong IoT là:", options: ["MQTT", "FTP", "SMTP", "POP3"], answer: "MQTT" },
+      { question: "Cảm biến ánh sáng được dùng để đo:", options: ["Cường độ ánh sáng", "Nhiệt độ", "Áp suất", "Độ ẩm"], answer: "Cường độ ánh sáng" },
+      { question: "IoT có thể ứng dụng trong quản lý rác thải qua:", options: ["Giám sát dung tích thùng rác và tối ưu hóa lịch thu gom", "Quản lý nhân sự", "Tăng chi phí xử lý", "Giảm kết nối mạng"], answer: "Giám sát dung tích thùng rác và tối ưu hóa lịch thu gom" },
+      { question: "“Real-time data” trong IoT có nghĩa là:", options: ["Dữ liệu được thu thập và xử lý ngay lập tức", "Dữ liệu lưu trữ lâu dài", "Dữ liệu không quan trọng", "Dữ liệu bị trễ"], answer: "Dữ liệu được thu thập và xử lý ngay lập tức" },
+      { question: "Trong ngành sản xuất, IoT giúp:", options: ["Tự động hóa quy trình và giảm thời gian chết máy", "Tăng số lượng nhân viên", "Tăng chi phí bảo trì", "Giảm tốc độ sản xuất"], answer: "Tự động hóa quy trình và giảm thời gian chết máy" },
+      { question: "“Protocol” trong IoT ám chỉ:", options: ["Các quy tắc giao tiếp giữa các thiết bị", "Phần mềm lưu trữ", "Thiết bị cảm biến", "Hệ điều hành"], answer: "Các quy tắc giao tiếp giữa các thiết bị" },
+      { question: "Một ứng dụng IoT trong quản lý năng lượng đô thị là:", options: ["Giám sát và điều chỉnh hệ thống điện", "Tăng cường kết nối mạng", "Quản lý dữ liệu cá nhân", "Phát triển ứng dụng"], answer: "Giám sát và điều chỉnh hệ thống điện" },
+      { question: "IoT có thể cải thiện an ninh thông qua:", options: ["Giám sát và cảnh báo sớm", "Tăng chi phí bảo trì", "Giảm kết nối", "Tăng dữ liệu lưu trữ"], answer: "Giám sát và cảnh báo sớm" },
+      { question: "Khái niệm “security” trong IoT bao gồm:", options: ["Mã hóa, xác thực và bảo mật dữ liệu", "Tăng tốc độ truyền tải", "Quản lý mạng xã hội", "Giảm số lượng thiết bị"], answer: "Mã hóa, xác thực và bảo mật dữ liệu" },
+      { question: "Một hệ thống IoT hiệu quả cần đảm bảo:", options: ["Tính mở rộng, bảo mật và độ tin cậy", "Tính phức tạp cao", "Màu sắc bắt mắt", "Giá thành rẻ"], answer: "Tính mở rộng, bảo mật và độ tin cậy" },
+      { question: "Các thiết bị IoT chủ yếu kết nối với:", options: ["Internet", "Mạng cục bộ", "Mạng xã hội", "Hệ thống máy in"], answer: "Internet" },
+      { question: "Trong thương mại điện tử, IoT được ứng dụng để:", options: ["Quản lý kho và theo dõi hàng hóa", "Phát triển website", "Quản lý dữ liệu khách hàng", "Quản lý email"], answer: "Quản lý kho và theo dõi hàng hóa" },
+      { question: "“Device management” trong IoT giúp:", options: ["Theo dõi và cập nhật thiết bị từ xa", "Phát triển ứng dụng", "Tăng chi phí vận hành", "Quản lý nhân sự"], answer: "Theo dõi và cập nhật thiết bị từ xa" },
+      { question: "Ví dụ về thiết bị IoT là:", options: ["Đồng hồ thông minh", "Máy in", "Bàn phím", "Máy tính để bàn"], answer: "Đồng hồ thông minh" },
+      { question: "IoT hỗ trợ cải thiện trải nghiệm người dùng thông qua:", options: ["Tự động hóa và cá nhân hóa dịch vụ", "Tăng tốc độ in ấn", "Giảm kết nối", "Tăng chi phí bảo trì"], answer: "Tự động hóa và cá nhân hóa dịch vụ" },
+      { question: "“Data processing” trong IoT thường diễn ra ở:", options: ["Cloud hoặc edge computing", "Bộ nhớ ngoài", "USB", "Đĩa CD"], answer: "Cloud hoặc edge computing" },
+      { question: "Trong ngành xây dựng, IoT được ứng dụng để:", options: ["Giám sát điều kiện công trình và môi trường", "Quản lý nhân sự", "Tăng chi phí", "Phát triển website"], answer: "Giám sát điều kiện công trình và môi trường" },
+      { question: "IoT giúp cải thiện quản lý nguồn nước qua:", options: ["Giám sát hệ thống cấp nước và đo lưu lượng", "Tăng tiêu thụ nước", "Giảm quản lý", "Tăng dữ liệu lưu trữ"], answer: "Giám sát hệ thống cấp nước và đo lưu lượng" },
+      { question: "“Analytics” trong IoT nhằm:", options: ["Phân tích dữ liệu để đưa ra quyết định", "Lưu trữ dữ liệu", "Quản lý cảm biến", "Kết nối thiết bị"], answer: "Phân tích dữ liệu để đưa ra quyết định" },
+      { question: "Một tiêu chí đánh giá hệ thống IoT là:", options: ["Khả năng mở rộng và độ tin cậy", "Tốc độ xử lý", "Màu sắc thiết bị", "Giá thành"], answer: "Khả năng mở rộng và độ tin cậy" },
+      { question: "Giao thức Wi-Fi 6 hỗ trợ IoT bằng cách:", options: ["Tăng tốc độ và khả năng kết nối nhiều thiết bị", "Giảm băng thông", "Tăng chi phí", "Giảm bảo mật"], answer: "Tăng tốc độ và khả năng kết nối nhiều thiết bị" },
+      { question: "“Over-the-air update” trong IoT là:", options: ["Cập nhật phần mềm từ xa qua mạng không dây", "Cập nhật qua cáp", "Cập nhật thủ công", "Cập nhật offline"], answer: "Cập nhật phần mềm từ xa qua mạng không dây" },
+      { question: "Một ứng dụng của IoT trong quản lý môi trường là:", options: ["Giám sát chất lượng không khí và nước", "Quản lý mạng xã hội", "Phát triển trò chơi", "Quản lý dữ liệu"], answer: "Giám sát chất lượng không khí và nước" },
+      { question: "“Latency” trong IoT chỉ:", options: ["Độ trễ trong truyền dữ liệu", "Tốc độ xử lý", "Băng thông", "Lưu lượng dữ liệu"], answer: "Độ trễ trong truyền dữ liệu" },
+      { question: "Một rủi ro của IoT là:", options: ["Tấn công mạng và xâm nhập dữ liệu", "Giảm kết nối", "Tăng tốc độ truyền dữ liệu", "Tăng chi phí vận hành"], answer: "Tấn công mạng và xâm nhập dữ liệu" },
+      { question: "Trong ngành bán lẻ, IoT hỗ trợ:", options: ["Quản lý kho và theo dõi hành vi khách hàng", "Tăng chi phí bảo trì", "Giảm tự động hóa", "Quản lý máy in"], answer: "Quản lý kho và theo dõi hành vi khách hàng" },
+      { question: "Cảm biến từ trong IoT được dùng để:", options: ["Phát hiện từ trường và định vị", "Đo nhiệt độ", "Đo ánh sáng", "Đo độ ẩm"], answer: "Phát hiện từ trường và định vị" },
+      { question: "Khái niệm “smart device” trong IoT chỉ:", options: ["Thiết bị có khả năng kết nối và tự xử lý", "Máy tính để bàn", "Máy in", "Bàn phím"], answer: "Thiết bị có khả năng kết nối và tự xử lý" },
+      { question: "Một ứng dụng của IoT trong giáo dục là:", options: ["Giám sát điều kiện lớp học và tiêu thụ năng lượng", "Quản lý email", "Phát triển website", "Quản lý tài liệu"], answer: "Giám sát điều kiện lớp học và tiêu thụ năng lượng" },
+      { question: "“Protocol stack” trong IoT là:", options: ["Tập hợp các giao thức làm việc cùng nhau để giao tiếp", "Bộ nhớ lưu trữ dữ liệu", "Phần mềm quản lý", "Thiết bị cảm biến"], answer: "Tập hợp các giao thức làm việc cùng nhau để giao tiếp" },
+      { question: "Trong logistics, IoT được ứng dụng để:", options: ["Theo dõi vị trí và trạng thái hàng hóa", "Quản lý nhân sự", "Tăng chi phí vận chuyển", "Giám sát mạng xã hội"], answer: "Theo dõi vị trí và trạng thái hàng hóa" },
+      { question: "IoT giúp doanh nghiệp:", options: ["Tự động hóa và tối ưu hóa quy trình", "Tăng thời gian chờ đợi", "Giảm số lượng thiết bị", "Tăng chi phí bảo trì"], answer: "Tự động hóa và tối ưu hóa quy trình" },
+      { question: "“Device firmware” thường được cập nhật nhằm:", options: ["Cải thiện bảo mật và hiệu năng", "Tăng tốc độ mạng", "Giảm băng thông", "Quản lý dữ liệu"], answer: "Cải thiện bảo mật và hiệu năng" },
+      { question: "Một tiêu chí quan trọng khi lựa chọn thiết bị IoT là:", options: ["Tiêu thụ năng lượng thấp và hiệu suất cao", "Giá đắt", "Kích thước lớn", "Màu sắc nổi bật"], answer: "Tiêu thụ năng lượng thấp và hiệu suất cao" },
+      { question: "Trong sản xuất, IoT được ứng dụng để:", options: ["Giám sát và điều khiển quy trình sản xuất", "Tăng số lượng nhân viên", "Giảm hiệu quả sản xuất", "Tăng chi phí vận hành"], answer: "Giám sát và điều khiển quy trình sản xuất" },
+      { question: "“API” trong IoT thường được dùng để:", options: ["Kết nối và giao tiếp giữa các ứng dụng", "Lưu trữ dữ liệu", "Phát triển cảm biến", "Quản lý phần cứng"], answer: "Kết nối và giao tiếp giữa các ứng dụng" },
+      { question: "Một ứng dụng của IoT trong ngành vận tải là:", options: ["Theo dõi vị trí xe và tối ưu hóa lộ trình", "Tăng thời gian phản hồi", "Giảm kết nối", "Quản lý email"], answer: "Theo dõi vị trí xe và tối ưu hóa lộ trình" },
+      { question: "“Scalability” trong IoT chỉ khả năng:", options: ["Mở rộng hệ thống khi cần", "Giảm kích thước thiết bị", "Tăng tốc độ xử lý", "Giảm chi phí"], answer: "Mở rộng hệ thống khi cần" },
+      { question: "Trong ngành dịch vụ, IoT giúp:", options: ["Cải thiện dịch vụ khách hàng thông qua tự động hóa", "Tăng thời gian chờ", "Giảm kết nối", "Tăng chi phí bảo trì"], answer: "Cải thiện dịch vụ khách hàng thông qua tự động hóa" },
+      { question: "“Latency” có thể ảnh hưởng đến:", options: ["Hiệu quả giao tiếp dữ liệu", "Màu sắc thiết bị", "Kích thước cảm biến", "Giá thành sản phẩm"], answer: "Hiệu quả giao tiếp dữ liệu" },
+      { question: "Một yếu tố quan trọng của IoT là:", options: ["Khả năng kết nối liên tục và ổn định", "Giá thành cao", "Tốc độ in ấn", "Kích thước màn hình"], answer: "Khả năng kết nối liên tục và ổn định" },
+      { question: "Trong hệ thống năng lượng thông minh, IoT hỗ trợ:", options: ["Quản lý và tối ưu hóa việc phân phối điện", "Tăng tiêu thụ năng lượng", "Quản lý email", "Giảm số lượng cảm biến"], answer: "Quản lý và tối ưu hóa việc phân phối điện" },
+      { question: "“Data visualization” trong IoT giúp:", options: ["Trình bày dữ liệu một cách trực quan", "Lưu trữ dữ liệu", "Quản lý thiết bị", "Kết nối mạng"], answer: "Trình bày dữ liệu một cách trực quan" },
+      { question: "Một ứng dụng của IoT trong nông nghiệp là:", options: ["Theo dõi tình trạng cây trồng và môi trường", "Quản lý bán hàng", "Phát triển phần mềm", "Quản lý mạng xã hội"], answer: "Theo dõi tình trạng cây trồng và môi trường" },
+      { question: "“Connectivity” trong IoT thường được cải thiện bằng:", options: ["Sử dụng các giao thức không dây tiên tiến", "Tăng kích thước thiết bị", "Giảm năng lượng", "Tăng thời gian chờ"], answer: "Sử dụng các giao thức không dây tiên tiến" },
+      { question: "Một ứng dụng của IoT trong quản lý đô thị là:", options: ["Giám sát và quản lý hạ tầng cơ sở", "Phát triển trò chơi", "Quản lý email", "Quản lý tài liệu"], answer: "Giám sát và quản lý hạ tầng cơ sở" },
+      { question: "“Sensing” trong IoT đề cập đến:", options: ["Quá trình thu thập dữ liệu từ môi trường", "Quá trình xử lý dữ liệu", "Quá trình lưu trữ", "Quá trình kết nối"], answer: "Quá trình thu thập dữ liệu từ môi trường" },
+      { question: "Một lợi ích của IoT là:", options: ["Tăng hiệu quả hoạt động thông qua tự động hóa", "Tăng chi phí bảo trì", "Giảm số lượng thiết bị", "Giảm kết nối"], answer: "Tăng hiệu quả hoạt động thông qua tự động hóa" },
+      { question: "Trong IoT, “integration” có nghĩa là:", options: ["Tích hợp các thiết bị, dữ liệu và hệ thống để làm việc cùng nhau", "Tách biệt các hệ thống", "Phát triển phần mềm độc lập", "Lưu trữ dữ liệu riêng lẻ"], answer: "Tích hợp các thiết bị, dữ liệu và hệ thống để làm việc cùng nhau" },
+      { question: "Một thách thức khi triển khai IoT quy mô lớn là:", options: ["Quản lý và bảo mật hàng ngàn thiết bị", "Giảm số lượng cảm biến", "Tăng chi phí phần cứng", "Giảm tốc độ xử lý"], answer: "Quản lý và bảo mật hàng ngàn thiết bị" }
+    ];
+
+    let quizData = [];
+    let current = 0;
+    let score = 0;
+
+    // Fisher-Yates shuffle function
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function initializeQuiz() {
+      // Create a copy of originalQuizData and shuffle it
+      quizData = shuffleArray([...originalQuizData]);
+      current = 0;
+      score = 0;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = quizData[current];
+      document.getElementById("question").innerText = `Câu ${current + 1}/200: ${q.question}`;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      // Create a copy of options and shuffle it
+      const shuffledOptions = shuffleArray([...q.options]);
+      shuffledOptions.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.className = "option";
+        btn.onclick = () => checkAnswer(opt);
+        optionsDiv.appendChild(btn);
+      });
+      document.getElementById("result").innerText = "";
+      document.getElementById("nextBtn").disabled = true;
+      document.getElementById("score").innerText = `Điểm: ${score}/200`;
+    }
+
+    function checkAnswer(selected) {
+      const correct = quizData[current].answer;
+      const resultDiv = document.getElementById("result");
+      if (selected === correct) {
+        score++;
+        resultDiv.innerText = "✅ Chính xác!";
+        resultDiv.style.color = "green";
+      } else {
+        resultDiv.innerText = `❌ Sai. Đáp án đúng là: ${correct}`;
+        resultDiv.style.color = "red";
+      }
+      document.getElementById("nextBtn").disabled = false;
+      document.getElementById("score").innerText = `Điểm: ${score}/200`;
+      document.querySelectorAll(".option").forEach(btn => btn.disabled = true);
+    }
+
+    function nextQuestion() {
+      current++;
+      if (current < quizData.length) {
+        loadQuestion();
+      } else {
+        const quizDiv = document.getElementById("quiz");
+        quizDiv.innerHTML = `
+          <h3>🎉 Bạn đã hoàn thành bài trắc nghiệm!</h3>
+          <p>Kết quả: ${score}/200 câu đúng</p>
+          <button onclick="resetQuiz()">Chơi lại</button>
+        `;
+      }
+    }
+
+    function resetQuiz() {
+      document.getElementById("quiz").innerHTML = `
+        <div class="question" id="question"></div>
+        <div id="options"></div>
+        <button id="nextBtn" onclick="nextQuestion()">Tiếp Theo</button>
+        <div id="result"></div>
+        <div id="score">Điểm: 0/200</div>
+      `;
+      initializeQuiz();
+    }
+
+    initializeQuiz();
+  </script>
+</body>
+</html>
